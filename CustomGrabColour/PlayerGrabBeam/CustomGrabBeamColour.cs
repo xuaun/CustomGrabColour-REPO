@@ -14,7 +14,7 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
     internal static GrabBeamColourSettings LocalHealingColour;
     internal static GrabBeamColourSettings LocalRotatingColour;
     internal static GrabBeamColourSettings LocalClimbingColour;
-    
+
     internal GrabBeamColourSettings CurrentNeutralColour;
     internal GrabBeamColourSettings CurrentHealingColour;
     internal GrabBeamColourSettings CurrentRotatingColour;
@@ -22,29 +22,6 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
     internal bool SentInitialColourUpdate = false;
 
     public PlayerAvatar player;
-    private Material _bodyMaterialInternal;
-    public Material BodyMaterial
-    {
-        set => _bodyMaterialInternal = value;
-        get
-        {
-            if (_bodyMaterialInternal == null)
-            {
-                try
-                {
-                    FieldInfo grabBeamActiveField = player.playerHealth.GetType().GetField("bodyMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-                    _bodyMaterialInternal = (Material)grabBeamActiveField.GetValue(player.playerHealth);
-                }
-                catch (Exception)
-                {
-                    Plugin.LogMessageIfDebug("Failed to get value of PlayerHealth bodyMaterial field");
-                    return null;
-                }
-            }
-
-            return _bodyMaterialInternal;
-        }
-    }
 
     public static GrabBeamColourSettings LocalBeamColour
     {
@@ -53,21 +30,21 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
             switch (value.CurrentBeamType)
             {
                 case BeamType.Neutral:
-                {
-                    LocalNeutralColour = value; break;
-                }
+                    {
+                        LocalNeutralColour = value; break;
+                    }
                 case BeamType.Heal:
-                {
-                    LocalHealingColour = value; break;
-                }
+                    {
+                        LocalHealingColour = value; break;
+                    }
                 case BeamType.Rotate:
-                {
-                    LocalRotatingColour = value; break;
-                }
+                    {
+                        LocalRotatingColour = value; break;
+                    }
                 case BeamType.Climb:
-                {
-                    LocalClimbingColour = value; break;
-                }
+                    {
+                        LocalClimbingColour = value; break;
+                    }
             }
         }
         get => throw new NotImplementedException("Tried to get field LocalBeamColour, call GetLocalSettingsForBeamType instead");
@@ -77,21 +54,21 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         switch (beamType)
         {
             case BeamType.Heal:
-            {
-                return LocalHealingColour;
-            }
+                {
+                    return LocalHealingColour;
+                }
             case BeamType.Rotate:
-            {
-                return LocalRotatingColour;
-            }
+                {
+                    return LocalRotatingColour;
+                }
             case BeamType.Climb:
-            {
-                return LocalClimbingColour;
-            }
+                {
+                    return LocalClimbingColour;
+                }
             default:
-            {
-                return LocalNeutralColour;
-            }
+                {
+                    return LocalNeutralColour;
+                }
         }
     }
 
@@ -102,21 +79,21 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
             switch (value.CurrentBeamType)
             {
                 case BeamType.Neutral:
-                {
-                    CurrentNeutralColour = value; break;
-                }
+                    {
+                        CurrentNeutralColour = value; break;
+                    }
                 case BeamType.Heal:
-                {
-                    CurrentHealingColour = value; break;
-                }
+                    {
+                        CurrentHealingColour = value; break;
+                    }
                 case BeamType.Rotate:
-                {
-                    CurrentRotatingColour = value; break;
-                }
+                    {
+                        CurrentRotatingColour = value; break;
+                    }
                 case BeamType.Climb:
-                {
-                    CurrentClimbingColour = value; break;
-                }
+                    {
+                        CurrentClimbingColour = value; break;
+                    }
             }
         }
         get => throw new NotImplementedException("Tried to get field CurrentBeamColour, call GetSettingsForBeamType instead");
@@ -126,21 +103,21 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         switch (beamType)
         {
             case BeamType.Heal:
-            {
-                return CurrentNeutralColour;
-            }
+                {
+                    return CurrentNeutralColour;
+                }
             case BeamType.Rotate:
-            {
-                return CurrentHealingColour;
-            }
+                {
+                    return CurrentHealingColour;
+                }
             case BeamType.Climb:
-            {
-                return CurrentClimbingColour;
-            }
+                {
+                    return CurrentClimbingColour;
+                }
             default:
-            {
-                return CurrentRotatingColour;
-            }
+                {
+                    return CurrentRotatingColour;
+                }
         }
     }
 
@@ -192,7 +169,8 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         if (GameManager.Multiplayer())
         {
             PlayerAvatar.instance.photonView.RPC("SetBeamColourRPC", RpcTarget.AllBuffered, ToRPCBuffer(settings));
-        } else
+        }
+        else
         {
             PlayerAvatar.instance.GetComponent<CustomGrabBeamColour>().SetBeamColourRPC(ToRPCBuffer(settings));
         }
@@ -234,35 +212,13 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         }
     }
 
-    // gets the body colour of the player this beam belongs to, will return the fallback colour if no body colour is found
     public Color GetBodyColour(Color fallbackColour)
     {
-        Color bodyColour = BodyMaterial.GetColor(Shader.PropertyToID("_AlbedoColor"));
-        if (bodyColour == null)
-        {
-            return fallbackColour;
-        }
-        return bodyColour;
+        return fallbackColour;
     }
 
     public static Color GetLocalBodyColour(Color fallbackColour)
     {
-        Color bodyColour;
-        try
-        {
-            FieldInfo grabBeamActiveField = PlayerAvatar.instance.playerHealth.GetType().GetField("bodyMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-            Material bodyMat = (Material)grabBeamActiveField.GetValue(PlayerAvatar.instance.playerHealth);
-            bodyColour = bodyMat.GetColor(Shader.PropertyToID("_AlbedoColor"));
-        }
-        catch (Exception)
-        {
-            Plugin.LogMessageIfDebug("Failed to get value of PlayerHealth bodyMaterial field in GetLocalBodyColour");
-            return fallbackColour;
-        }
-        if (bodyColour == null)
-        {
-            return fallbackColour;
-        }
-        return bodyColour;
+        return fallbackColour;
     }
 }
