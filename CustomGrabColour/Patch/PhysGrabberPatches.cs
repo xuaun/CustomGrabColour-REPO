@@ -65,9 +65,9 @@ internal abstract class PhysGrabberPatches
             }
 
             Color customColour;
-            if(grabBeamSettings.MatchSkin)
+            if(grabBeamSettings.UseAvatarColour)
             {
-                customColour = grabBeamColour.GetBodyColour(grabBeamSettings.Colour);
+                customColour = grabBeamColour.GetAvatarColour(grabBeamSettings.CurrentAvatarColourSource, grabBeamSettings.Colour);
                 customColour.a = grabBeamSettings.Colour.a;
             }
             else

@@ -21,6 +21,14 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
     internal GrabBeamColourSettings CurrentClimbingColour;
     internal bool SentInitialColourUpdate = false;
 
+    private static bool _hasLocalAvatarColours;
+    private static Color _localAvatarGrabberColour;
+    private static Color _localAvatarArmRightColour;
+
+    private bool _hasAvatarColours;
+    private Color _avatarGrabberColour;
+    private Color _avatarArmRightColour;
+
     public PlayerAvatar player;
 
     public static GrabBeamColourSettings LocalBeamColour
@@ -104,11 +112,11 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         {
             case BeamType.Heal:
                 {
-                    return CurrentNeutralColour;
+                    return CurrentHealingColour;
                 }
             case BeamType.Rotate:
                 {
-                    return CurrentHealingColour;
+                    return CurrentRotatingColour;
                 }
             case BeamType.Climb:
                 {
@@ -116,7 +124,7 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
                 }
             default:
                 {
-                    return CurrentRotatingColour;
+                    return CurrentNeutralColour;
                 }
         }
     }
@@ -141,10 +149,10 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
 
     public static void ResetBeamColours()
     {
-        LocalNeutralColour = new GrabBeamColourSettings(CustomGrabColourConfig.NeutralDefaultColour, (bool)CustomGrabColourConfig.NeutralGrabBeam.MatchSkin.DefaultValue, BeamType.Neutral);
-        LocalRotatingColour = new GrabBeamColourSettings(CustomGrabColourConfig.RotatingDefaultColour, (bool)CustomGrabColourConfig.RotatingGrabBeam.MatchSkin.DefaultValue, BeamType.Rotate);
-        LocalHealingColour = new GrabBeamColourSettings(CustomGrabColourConfig.HealingDefaultColour, (bool)CustomGrabColourConfig.HealingGrabBeam.MatchSkin.DefaultValue, BeamType.Heal);
-        LocalClimbingColour = new GrabBeamColourSettings(CustomGrabColourConfig.ClimbingDefaultColour, (bool)CustomGrabColourConfig.ClimbingGrabBeam.MatchSkin.DefaultValue, BeamType.Climb);
+        LocalNeutralColour = new GrabBeamColourSettings(CustomGrabColourConfig.NeutralDefaultColour, (bool)CustomGrabColourConfig.NeutralGrabBeam.UseAvatarColour.DefaultValue, BeamType.Neutral, CustomGrabColourConfig.DefaultAvatarColourSource);
+        LocalRotatingColour = new GrabBeamColourSettings(CustomGrabColourConfig.RotatingDefaultColour, (bool)CustomGrabColourConfig.RotatingGrabBeam.UseAvatarColour.DefaultValue, BeamType.Rotate, CustomGrabColourConfig.DefaultAvatarColourSource);
+        LocalHealingColour = new GrabBeamColourSettings(CustomGrabColourConfig.HealingDefaultColour, (bool)CustomGrabColourConfig.HealingGrabBeam.UseAvatarColour.DefaultValue, BeamType.Heal, CustomGrabColourConfig.DefaultAvatarColourSource);
+        LocalClimbingColour = new GrabBeamColourSettings(CustomGrabColourConfig.ClimbingDefaultColour, (bool)CustomGrabColourConfig.ClimbingGrabBeam.UseAvatarColour.DefaultValue, BeamType.Climb, CustomGrabColourConfig.DefaultAvatarColourSource);
         UpdateBeamColourForAllBeams();
     }
 
@@ -166,6 +174,12 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
     {
         GrabBeamColourSettings settings = GetLocalSettingsForBeamType(beamType);
 
+        if (PlayerAvatar.instance == null)
+        {
+            Plugin.LogMessageIfDebug("[CustomGrabBeamColour] No local PlayerAvatar instance, skipping beam colour update");
+            return;
+        }
+
         if (GameManager.Multiplayer())
         {
             PlayerAvatar.instance.photonView.RPC("SetBeamColourRPC", RpcTarget.AllBuffered, ToRPCBuffer(settings));
@@ -176,17 +190,73 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         }
     }
 
+    public static void TryUpdateAvatarColours(PlayerCosmetics cosmetics, int[]? cosmeticColors)
+    {
+        if (!AvatarColourResolver.TryGetAvatarColours(
+                cosmetics,
+                cosmeticColors,
+                out PlayerAvatar? playerAvatar,
+                out Color avatarGrabberColour,
+                out Color avatarArmRightColour
+            ))
+        {
+            return;
+        }
+
+        if (playerAvatar == null)
+        {
+            Plugin.LogMessageIfDebug("[CustomGrabBeamColour] Avatar grabber colour resolved without a PlayerAvatar");
+            return;
+        }
+
+        CustomGrabBeamColour customGrabBeamColour = playerAvatar.GetComponent<CustomGrabBeamColour>();
+        if (customGrabBeamColour == null)
+        {
+            Plugin.LogMessageIfDebug("[CustomGrabBeamColour] PlayerAvatar has no CustomGrabBeamColour component yet");
+            return;
+        }
+
+        customGrabBeamColour.SetAvatarColours(avatarGrabberColour, avatarArmRightColour);
+
+        if (PlayerAvatar.instance == null || playerAvatar != PlayerAvatar.instance)
+        {
+            Plugin.LogMessageIfDebug("[CustomGrabBeamColour] Updated remote avatar colour cache");
+            return;
+        }
+
+        _localAvatarGrabberColour = avatarGrabberColour;
+        _localAvatarArmRightColour = avatarArmRightColour;
+        _hasLocalAvatarColours = true;
+        UpdateBeamColourForAvatarColourBeams();
+    }
+
+    private static void UpdateBeamColourForAvatarColourBeams()
+    {
+        foreach (BeamType beamType in Enum.GetValues(typeof(BeamType)))
+        {
+            GrabBeamColourSettings settings = GetLocalSettingsForBeamType(beamType);
+            if (!settings.UseAvatarColour) continue;
+
+            UpdateBeamColour(beamType);
+        }
+    }
+
+    private void SetAvatarColours(Color avatarGrabberColour, Color avatarArmRightColour)
+    {
+        _avatarGrabberColour = avatarGrabberColour;
+        _avatarArmRightColour = avatarArmRightColour;
+        _hasAvatarColours = true;
+    }
+
     [PunRPC]
     public void SetBeamColourRPC(object[] beamColourParts)
     {
         GrabBeamColourSettings newBeamColour = FromRPCBuffer(beamColourParts);
-        Plugin.LogMessageIfDebug("SetBeamColourRPC called with values: r:" + newBeamColour.r + ", g:" + newBeamColour.g + ", b:" + newBeamColour.b + ", a:" + newBeamColour.a + ", matchSkin:" + newBeamColour.MatchSkin + ", beamType:" + newBeamColour.CurrentBeamType);
+        Plugin.LogMessageIfDebug("SetBeamColourRPC called with values: r:" + newBeamColour.r + ", g:" + newBeamColour.g + ", b:" + newBeamColour.b + ", a:" + newBeamColour.a + ", useAvatarColour:" + newBeamColour.UseAvatarColour + ", avatarColourSource:" + newBeamColour.CurrentAvatarColourSource + ", beamType:" + newBeamColour.CurrentBeamType);
 
         newBeamColour.a = Mathf.Clamp(newBeamColour.a, 0f, CustomGrabColourConfig.MaxOpacity);
 
         CurrentBeamColour = newBeamColour;
-
-        if (newBeamColour.CurrentBeamType != BeamType.Neutral) return;
 
         // invoke ColorStates method to make sure the beam colour updates properly
         Type physGrabberType = player.physGrabber.GetType();
@@ -212,13 +282,25 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
         }
     }
 
-    public Color GetBodyColour(Color fallbackColour)
+    public Color GetAvatarColour(AvatarColourSource avatarColourSource, Color fallbackColour)
     {
-        return fallbackColour;
+        if (!_hasAvatarColours) return fallbackColour;
+
+        return avatarColourSource switch
+        {
+            AvatarColourSource.ArmRight => _avatarArmRightColour,
+            _ => _avatarGrabberColour
+        };
     }
 
-    public static Color GetLocalBodyColour(Color fallbackColour)
+    public static Color GetLocalAvatarColour(AvatarColourSource avatarColourSource, Color fallbackColour)
     {
-        return fallbackColour;
+        if (!_hasLocalAvatarColours) return fallbackColour;
+
+        return avatarColourSource switch
+        {
+            AvatarColourSource.ArmRight => _localAvatarArmRightColour,
+            _ => _localAvatarGrabberColour
+        };
     }
 }
