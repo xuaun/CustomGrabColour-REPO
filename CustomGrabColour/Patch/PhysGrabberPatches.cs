@@ -27,12 +27,6 @@ internal abstract class PhysGrabberPatches
         {
             int currentColourState = PrevColorStateRef(__instance);
 
-            if (mainColor == null || emissionColor == null)
-            {
-                ResetRotateBeamGridsColour(__instance);
-                return;
-            }
-
             CustomGrabBeamColour grabBeamColour = GetCurrentGrabBeamColour(__instance);
             if (!grabBeamColour)
             {
@@ -75,7 +69,7 @@ internal abstract class PhysGrabberPatches
                 customColour = grabBeamSettings.Colour;
             }
 
-            mainColor.r = customColour.r / 3.5f; // TODO: probably find a better way to fix this
+            mainColor.r = customColour.r / 3.5f; // empirical divisors to match the beam shader's HDR output
             mainColor.g = customColour.g / 4f;
             mainColor.b = customColour.b / 3.5f;
             mainColor.a = customColour.a;
@@ -135,7 +129,7 @@ internal abstract class PhysGrabberPatches
     {
         static bool Prefix()
         {
-            // cancel changing the beam alpha
+            // the game resets beam alpha every frame; block it to preserve custom opacity
             return false;
         }
     }
@@ -164,9 +158,8 @@ internal abstract class PhysGrabberPatches
             await Task.Delay(100);
     
             Plugin.LogMessageIfDebug("PhysGrabBeamActivate called");
-    
-            // if player has custom beam colour update it when they activate their beam
-            GrabBeamUtil.TrySendBeamColourUpdateForAllBeams(__instance.playerAvatar);
+
+            CustomGrabBeamColour.UpdateBeamColourForAllBeams();
             grabBeamColour.SentInitialColourUpdate = true;
         }
     }

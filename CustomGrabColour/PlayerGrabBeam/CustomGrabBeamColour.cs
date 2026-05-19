@@ -8,7 +8,7 @@ using static CustomGrabColour.PlayerGrabBeam.GrabBeamColourSettings;
 namespace CustomGrabColour.PlayerGrabBeam;
 
 // handles local and other players grab beam colours
-public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
+public class CustomGrabBeamColour : MonoBehaviour
 {
     internal static GrabBeamColourSettings LocalNeutralColour;
     internal static GrabBeamColourSettings LocalHealingColour;
@@ -55,7 +55,6 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
                     }
             }
         }
-        get => throw new NotImplementedException("Tried to get field LocalBeamColour, call GetLocalSettingsForBeamType instead");
     }
     public static GrabBeamColourSettings GetLocalSettingsForBeamType(BeamType beamType)
     {
@@ -104,7 +103,6 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
                     }
             }
         }
-        get => throw new NotImplementedException("Tried to get field CurrentBeamColour, call GetSettingsForBeamType instead");
     }
     public GrabBeamColourSettings GetSettingsForBeamType(BeamType beamType)
     {
@@ -132,11 +130,6 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
     void Awake()
     {
         player = gameObject.GetComponent<PlayerAvatar>();
-    }
-
-    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-    {
-        throw new NotImplementedException();
     }
 
     public static void SaveLocalColoursToConfig()
@@ -258,7 +251,7 @@ public class CustomGrabBeamColour : MonoBehaviour, IPunObservable
 
         CurrentBeamColour = newBeamColour;
 
-        // invoke ColorStates method to make sure the beam colour updates properly
+        // reset prevColorState so ColorStates() re-applies the colour on next call
         Type physGrabberType = player.physGrabber.GetType();
 
         try

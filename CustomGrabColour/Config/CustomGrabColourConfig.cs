@@ -173,22 +173,18 @@ public static class CustomGrabColourConfig
 
     private static void LoadValuesFromConfig()
     {
-        // load neutral colour
         Color neutralColourFromConfig = ConfigUtil.StringToColor(NeutralGrabBeam.BeamColour.Value, NeutralDefaultColour);
         neutralColourFromConfig.a = Mathf.Clamp(neutralColourFromConfig.a, 0f, MaxOpacity);
         CustomGrabBeamColour.LocalNeutralColour = new GrabBeamColourSettings(neutralColourFromConfig, NeutralGrabBeam.UseAvatarColour.Value, GrabBeamColourSettings.BeamType.Neutral, NeutralGrabBeam.AvatarColourSource.Value);
 
-        // load rotating colour
         Color rotatingColourFromConfig = ConfigUtil.StringToColor(RotatingGrabBeam.BeamColour.Value, RotatingDefaultColour);
         rotatingColourFromConfig.a = Mathf.Clamp(rotatingColourFromConfig.a, 0f, MaxOpacity);
         CustomGrabBeamColour.LocalRotatingColour = new GrabBeamColourSettings(rotatingColourFromConfig, RotatingGrabBeam.UseAvatarColour.Value, GrabBeamColourSettings.BeamType.Rotate, RotatingGrabBeam.AvatarColourSource.Value);
 
-        // load healing colour
         Color healingColourFromConfig = ConfigUtil.StringToColor(HealingGrabBeam.BeamColour.Value, HealingDefaultColour);
         healingColourFromConfig.a = Mathf.Clamp(healingColourFromConfig.a, 0f, MaxOpacity);
         CustomGrabBeamColour.LocalHealingColour = new GrabBeamColourSettings(healingColourFromConfig, HealingGrabBeam.UseAvatarColour.Value, GrabBeamColourSettings.BeamType.Heal, HealingGrabBeam.AvatarColourSource.Value);
 
-        // load climbing colour
         Color climbingColourFromConfig = ConfigUtil.StringToColor(ClimbingGrabBeam.BeamColour.Value, ClimbingDefaultColour);
         climbingColourFromConfig.a = Mathf.Clamp(climbingColourFromConfig.a, 0f, MaxOpacity);
         CustomGrabBeamColour.LocalClimbingColour = new GrabBeamColourSettings(climbingColourFromConfig, ClimbingGrabBeam.UseAvatarColour.Value, GrabBeamColourSettings.BeamType.Climb, ClimbingGrabBeam.AvatarColourSource.Value);

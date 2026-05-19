@@ -8,3 +8,4 @@ Releases/*
 Releases/*.*
 !Releases/build.bat
 /ExploitFixes.sln.DotSettings.user
+Directory.Build.props

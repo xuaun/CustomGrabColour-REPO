@@ -28,20 +28,17 @@ internal static class ConfigMenu
     {
         MenuAPI.AddElementToEscapeMenu(parent =>
         {
-            // add button to open colour config screen
             MenuAPI.CreateREPOButton("Change Grab Colour", OpenPopup, parent, localPosition: new Vector2(28.3f, 350.0f));
         });
         MenuAPI.AddElementToColorMenu(parent =>
         {
-            // add button to open colour config screen
             MenuAPI.CreateREPOButton("Change Grab Colour", OpenPopup, parent, localPosition: new Vector2(28.3f, 350.0f));
         });
-        
+
         if (CustomGrabColourConfig.DebugAddButtonToMainMenu.Value)
         {
             MenuAPI.AddElementToMainMenu(parent =>
             {
-                // add button to open colour config screen
                 MenuAPI.CreateREPOButton("Change Grab Colour", OpenPopup, parent, localPosition: new Vector2(28.3f, 350.0f));
             });
         }
@@ -613,7 +610,6 @@ internal static class ConfigMenu
             resetButton.transform.localScale = new Vector2(0.5f, 0.5f);
         });
 
-        // setup colour previews and open page
         SetupPreviewRectangleColours(CustomGrabBeamColour.LocalNeutralColour.Colour, CustomGrabBeamColour.LocalRotatingColour.Colour, CustomGrabBeamColour.LocalHealingColour.Colour, CustomGrabBeamColour.LocalClimbingColour.Colour);
         changeGrabColourPage.OpenPage(false);
     }
@@ -744,11 +740,11 @@ internal static class ConfigMenu
         return 40 * index;
     }
 
+    private const float VerticalBase = -160f;
+    private const float VerticalSpacing = 150f;
+
     private static float GetVerticalPos(int offset)
     {
-        int index = -Math.Abs(0 - offset);
-        index += 3;
-        // first number is offset from bottom, second number is spacing between elements
-        return -160f + (150 * index);
+        return VerticalBase + VerticalSpacing * (3 - offset);
     }
 }

@@ -11,7 +11,6 @@ public static class ConfigUtil
 
     public static Color StringToColor(string color, Color defaultColour)
     {
-        // parse r,g,b string
         string[] splitString = color.Split(',');
         switch (splitString.Length) {
             case 3:
@@ -29,7 +28,6 @@ public static class ConfigUtil
                 }
                 return new Color(elements[0], elements[1], elements[2], CustomGrabColourConfig.DefaultOpacity);
             }
-            // parse rgba string
             case 4:
             {
                 float[] elements = new float[4];
